@@ -10,7 +10,7 @@ export const createTicket = async(req, res) => {
             return res.status(400).json({message: "Title and description are required"})
         }
 
-        const newTicket = Ticket.create({
+        const newTicket = await Ticket.create({
             title,
             description,
             createdBy: req.user._id.toString()
@@ -19,7 +19,7 @@ export const createTicket = async(req, res) => {
         await inngest.send({
             name: "ticket/created",
             data: {
-                ticketId: (await newTicket)._id.toString(),
+                ticketId: newTicket._id.toString(),
                 title,
                 description,
                 createdBy: req.user._id.toString()
@@ -31,7 +31,7 @@ export const createTicket = async(req, res) => {
             ticket: newTicket
         })
     } catch (error) {
-        console.error("Error craeting ticket");
+        console.error("Error creating ticket:", error);
         return res.status(500).json({message: "Internal Server Error"})
     }
 }
@@ -63,11 +63,11 @@ export const getTicket = async(req,res) => {
         let ticket = [];
 
         if(user.role != "user"){
-           ticket = Ticket.findById(req.params.id)
+           ticket = await Ticket.findById(req.params.id)
             .populate("assignedTo", ["email","_id"])
         }
         else{
-            ticket = Ticket.findOne({
+            ticket = await Ticket.findOne({
                 createdBy: user._id,
                 _id: req.params.id
             }).select("title description status createdAt")
