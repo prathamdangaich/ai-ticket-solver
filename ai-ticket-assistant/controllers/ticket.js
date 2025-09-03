@@ -14,7 +14,7 @@ export const createTicket = async(req, res) => {
         const newTicket = await Ticket.create({
             title,
             description,
-            createdBy: new mongoose.Types.ObjectId(req.user.id)
+            createdBy: req.user._id.toString()
         })
 
         await inngest.send({
