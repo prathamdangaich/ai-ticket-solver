@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {inngest} from "../inngest/client.js"
 import ticket from "../models/ticket.js"
 import Ticket from "../models/ticket.js"
@@ -13,7 +14,7 @@ export const createTicket = async(req, res) => {
         const newTicket = await Ticket.create({
             title,
             description,
-            createdBy: req.user._id.toString()
+            createdBy: new mongoose.Types.ObjectId(req.user.id)
         })
 
         await inngest.send({
@@ -32,7 +33,12 @@ export const createTicket = async(req, res) => {
         })
     } catch (error) {
         console.error("Error creating ticket:", error);
-        return res.status(500).json({message: "Internal Server Error"})
+        // return res.status(500).json({message: "Internal Server Error"})
+        return res.status(500).json({
+        message: "Internal Server Error",
+        details: error.message,
+        stack: error.stack
+    });
     }
 }
 
