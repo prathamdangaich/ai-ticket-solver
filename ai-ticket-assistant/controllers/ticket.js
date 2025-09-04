@@ -1,6 +1,4 @@
-import mongoose from "mongoose";
 import {inngest} from "../inngest/client.js"
-import ticket from "../models/ticket.js"
 import Ticket from "../models/ticket.js"
 
 
@@ -26,6 +24,7 @@ export const createTicket = async(req, res) => {
                 createdBy: req.user._id.toString()
             }
         });
+        console.log("✅ Event sent to Inngest for ticket:", newTicket._id);
 
         return res.status(201).json({
             message: "Ticket created and processing started",
