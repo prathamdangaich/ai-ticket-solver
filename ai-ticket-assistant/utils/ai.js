@@ -48,16 +48,15 @@ Ticket information:
 - Title: ${ticket.title}
 - Description: ${ticket.description}`);
 
-const raw = response.output[0].context
+const raw = response.output?.[0]?.context || "";
 
-try{
-    const match = raw.match(/```json\s*([\s\S]*?)\s*```/i);
-    const jsonString = match ? match[1] : raw.trim()
-    return JSON.parse(jsonString)
-}
-catch(e){
-    console.log("Failed to pass JSON to AI response " + e.message);
-    return null;
+let jsonString = raw.trim();
+try {
+  return JSON.parse(jsonString);
+} catch {
+  const match = raw.match(/{[\s\S]*}/);
+  if (match) return JSON.parse(match[0]);
+  return null;
 }
 
 };
