@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 
 export default function Tickets() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ title: "", description: "" });
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,6 +60,12 @@ export default function Tickets() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // removes the saved JWT token
+    navigate("/login"); // redirects user to login page
+  };
+
+
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Create Ticket</h2>
@@ -79,9 +87,15 @@ export default function Tickets() {
           className="textarea textarea-bordered w-full"
           required
         ></textarea>
-        <button className="btn btn-primary" type="submit" disabled={loading}>
+        <div className="flex gap-3">
+          <button className="btn btn-primary" type="submit" disabled={loading}>
           {loading ? "Submitting..." : "Submit Ticket"}
-        </button>
+          </button>
+          
+          <button className="btn btn-primary" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </form>
 
       <h2 className="text-xl font-semibold mb-2">All Tickets</h2>

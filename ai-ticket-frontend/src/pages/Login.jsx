@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 
 function Login() {
 
@@ -77,6 +77,15 @@ function Login() {
               {loading ? "Logging in..." : "Login"}
             </button>
           </div>
+
+          {/* Signup redirect */}
+          <p className="text-center mt-2 text-sm">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-primary font-semibold">
+              Sign Up
+            </Link>
+          </p>
+
         </form>
       </div>
     </div>
