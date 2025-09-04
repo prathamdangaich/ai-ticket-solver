@@ -45,10 +45,29 @@ export const getTickets = async(req,res) => {
     try {
         const user = req.user
         let tickets = []
-        if(user.role !== "user"){
+        if(user.role === "admin"){
            tickets = await Ticket.find({})
            .populate("assignedTo", ["email", "_id"])
+           .populate("createdBy", ["email", "_id"])
            .sort({createdAt: -1})
+        }
+        else if(user.role === "moderator"){
+            // Return both assigned and created tickets separately
+            const assignedTickets = await Ticket.find({assignedTo: user._id})
+                .populate("createdBy", ["email", "_id"])
+                .select("title description status createdAt priority helpfulNotes relatedSkills assignedTo")
+                .sort({createdAt: -1})
+            
+            const createdTickets = await Ticket.find({createdBy: user._id})
+                .populate("assignedTo", ["email", "_id"])
+                .select("title description status createdAt priority helpfulNotes relatedSkills assignedTo")
+                .sort({createdAt: -1})
+            
+            // Return both arrays in the response
+            return res.status(200).json({
+                assignedTickets,
+                createdTickets
+            });
         }
         else{
             tickets = await Ticket.find({createdBy: user._id})

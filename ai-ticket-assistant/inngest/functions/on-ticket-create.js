@@ -58,10 +58,36 @@ export const onTicketCreated = inngest.createFunction(
             return null;
         }
 
-        let query = { role: "moderator" };
-        query.skills = { $elemMatch: { $regex: relatedSkills.join("|"), $options: "i" } };
+        // First try to find a moderator with ALL required skills
+        let user = await User.findOne({ 
+            role: "moderator",
+            skills: { $all: relatedSkills }
+        });
 
-        let user = await User.findOne(query);
+        // If no moderator has all skills, find the one with the most matching skills
+        if (!user) {
+            const moderators = await User.find({ role: "moderator" });
+            let bestMatch = null;
+            let maxMatches = 0;
+
+            for (const moderator of moderators) {
+                const matchingSkills = moderator.skills.filter(skill => 
+                    relatedSkills.some(requiredSkill => 
+                        skill.toLowerCase().includes(requiredSkill.toLowerCase()) ||
+                        requiredSkill.toLowerCase().includes(skill.toLowerCase())
+                    )
+                );
+                
+                if (matchingSkills.length > maxMatches) {
+                    maxMatches = matchingSkills.length;
+                    bestMatch = moderator;
+                }
+            }
+
+            user = bestMatch;
+        }
+
+        // Fallback to admin if no suitable moderator found
         if (!user) {
             user = await User.findOne({ role: "admin" });
         }

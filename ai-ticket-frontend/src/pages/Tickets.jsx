@@ -6,6 +6,8 @@ export default function Tickets() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: "", description: "" });
   const [tickets, setTickets] = useState([]);
+  const [assignedTickets, setAssignedTickets] = useState([]);
+  const [createdTickets, setCreatedTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null); // store logged-in user
   const [users, setUsers] = useState([]); // for admin: all users
@@ -26,7 +28,19 @@ export default function Tickets() {
         method: "GET",
       });
       const data = await res.json();
-      setTickets(data || []);
+      
+      // Check if response has separate arrays for moderators
+      if (data.assignedTickets !== undefined && data.createdTickets !== undefined) {
+        // For moderators, handle separate arrays
+        setAssignedTickets(data.assignedTickets || []);
+        setCreatedTickets(data.createdTickets || []);
+        setTickets([]); // Clear regular tickets array
+      } else {
+        // For admin and users, use regular tickets array
+        setTickets(data || []);
+        setAssignedTickets([]);
+        setCreatedTickets([]);
+      }
     } catch (err) {
       console.error("Failed to fetch tickets:", err);
     }
@@ -244,23 +258,120 @@ export default function Tickets() {
         </div>
       )}
 
-      <h2 className="text-xl font-semibold mb-2">All Tickets</h2>
-      <div className="space-y-3">
-        {tickets.map((ticket) => (
-          <Link
-            key={ticket._id}
-            className="card shadow-md p-4 bg-gray-800"
-            to={`/tickets/${ticket._id}`}
-          >
-            <h3 className="font-bold text-lg">{ticket.title}</h3>
-            <p className="text-sm">{ticket.description}</p>
-            <p className="text-sm text-gray-500">
-              Created At: {new Date(ticket.createdAt).toLocaleString()}
-            </p>
-          </Link>
-        ))}
-        {tickets.length === 0 && <p>No tickets submitted yet.</p>}
-      </div>
+      {/* Different sections based on user role */}
+      {user?.role === "moderator" && (
+        <>
+          {/* Assigned Tickets Section */}
+          <h2 className="text-xl font-semibold mb-2">Assigned Tickets</h2>
+          <div className="space-y-3 mb-6">
+            {assignedTickets.map((ticket) => (
+              <Link
+                key={ticket._id}
+                className="card shadow-md p-4 bg-gray-800"
+                to={`/tickets/${ticket._id}`}
+              >
+                <h3 className="font-bold text-lg">{ticket.title}</h3>
+                <p className="text-sm">{ticket.description}</p>
+                <p className="text-sm text-gray-500">
+                  Created by: {ticket.createdBy?.email} | Status: {ticket.status}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Created At: {new Date(ticket.createdAt).toLocaleString()}
+                </p>
+                {ticket.priority && (
+                  <p className="text-sm text-yellow-400">Priority: {ticket.priority}</p>
+                )}
+                {ticket.relatedSkills?.length > 0 && (
+                  <p className="text-sm text-blue-400">
+                    Skills: {ticket.relatedSkills.join(", ")}
+                  </p>
+                )}
+              </Link>
+            ))}
+            {assignedTickets.length === 0 && <p>No tickets assigned to you yet.</p>}
+          </div>
+
+          {/* Created Tickets Section */}
+          <h2 className="text-xl font-semibold mb-2">My Created Tickets</h2>
+          <div className="space-y-3">
+            {createdTickets.map((ticket) => (
+              <Link
+                key={ticket._id}
+                className="card shadow-md p-4 bg-gray-800"
+                to={`/tickets/${ticket._id}`}
+              >
+                <h3 className="font-bold text-lg">{ticket.title}</h3>
+                <p className="text-sm">{ticket.description}</p>
+                <p className="text-sm text-gray-500">
+                  Assigned to: {ticket.assignedTo?.email || "Unassigned"} | Status: {ticket.status}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Created At: {new Date(ticket.createdAt).toLocaleString()}
+                </p>
+                {ticket.priority && (
+                  <p className="text-sm text-yellow-400">Priority: {ticket.priority}</p>
+                )}
+                {ticket.relatedSkills?.length > 0 && (
+                  <p className="text-sm text-blue-400">
+                    Skills: {ticket.relatedSkills.join(", ")}
+                  </p>
+                )}
+              </Link>
+            ))}
+            {createdTickets.length === 0 && <p>No tickets created by you yet.</p>}
+          </div>
+        </>
+      )}
+
+      {user?.role === "admin" && (
+        <>
+          <h2 className="text-xl font-semibold mb-2">All Tickets</h2>
+          <div className="space-y-3">
+            {tickets.map((ticket) => (
+              <Link
+                key={ticket._id}
+                className="card shadow-md p-4 bg-gray-800"
+                to={`/tickets/${ticket._id}`}
+              >
+                <h3 className="font-bold text-lg">{ticket.title}</h3>
+                <p className="text-sm">{ticket.description}</p>
+                <p className="text-sm text-gray-500">
+                  Created by: {ticket.createdBy?.email} | Assigned to: {ticket.assignedTo?.email || "Unassigned"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Created At: {new Date(ticket.createdAt).toLocaleString()}
+                </p>
+              </Link>
+            ))}
+            {tickets.length === 0 && <p>No tickets found.</p>}
+          </div>
+        </>
+      )}
+
+      {user?.role === "user" && (
+        <>
+          <h2 className="text-xl font-semibold mb-2">My Tickets</h2>
+          <div className="space-y-3">
+            {tickets.map((ticket) => (
+              <Link
+                key={ticket._id}
+                className="card shadow-md p-4 bg-gray-800"
+                to={`/tickets/${ticket._id}`}
+              >
+                <h3 className="font-bold text-lg">{ticket.title}</h3>
+                <p className="text-sm">{ticket.description}</p>
+                <p className="text-sm text-gray-500">
+                  Status: {ticket.status}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Created At: {new Date(ticket.createdAt).toLocaleString()}
+                </p>
+              </Link>
+            ))}
+            {tickets.length === 0 && <p>No tickets submitted yet.</p>}
+          </div>
+        </>
+      )}
     </div>
   );
 }
