@@ -46,6 +46,31 @@ export default function Tickets() {
     }
   };
 
+  const deleteTicket = async (ticketId) => {
+    if (!window.confirm("Are you sure you want to delete this ticket? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        method: "DELETE",
+      });
+      
+      if (res.ok) {
+        // Refresh the tickets list
+        fetchTickets();
+        alert("Ticket deleted successfully");
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to delete ticket");
+      }
+    } catch (err) {
+      console.error("Failed to delete ticket:", err);
+      alert("Failed to delete ticket");
+    }
+  };
+
   const handleToggleUsers = async () => {
     try {
       if (!showUsers) {
@@ -328,20 +353,31 @@ export default function Tickets() {
           <h2 className="text-xl font-semibold mb-2">All Tickets</h2>
           <div className="space-y-3">
             {tickets.map((ticket) => (
-              <Link
-                key={ticket._id}
-                className="card shadow-md p-4 bg-gray-800"
-                to={`/tickets/${ticket._id}`}
-              >
-                <h3 className="font-bold text-lg">{ticket.title}</h3>
-                <p className="text-sm">{ticket.description}</p>
-                <p className="text-sm text-gray-500">
-                  Created by: {ticket.createdBy?.email} | Assigned to: {ticket.assignedTo?.email || "Unassigned"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Created At: {new Date(ticket.createdAt).toLocaleString()}
-                </p>
-              </Link>
+              <div key={ticket._id} className="card shadow-md p-4 bg-gray-800">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <Link to={`/tickets/${ticket._id}`} className="block">
+                      <h3 className="font-bold text-lg">{ticket.title}</h3>
+                      <p className="text-sm">{ticket.description}</p>
+                      <p className="text-sm text-gray-500">
+                        Created by: {ticket.createdBy?.email} | Assigned to: {ticket.assignedTo?.email || "Unassigned"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Created At: {new Date(ticket.createdAt).toLocaleString()}
+                      </p>
+                    </Link>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      deleteTicket(ticket._id);
+                    }}
+                    className="btn btn-primary"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             ))}
             {tickets.length === 0 && <p>No tickets found.</p>}
           </div>

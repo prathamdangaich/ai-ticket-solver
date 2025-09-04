@@ -143,3 +143,28 @@ export const getTicketDetails = async(req,res) => {
         return res.status(500).json({message: "Internal Server Error"});
     }
 }
+
+export const deleteTicket = async(req,res) => {
+    try {
+        const user = req.user;
+        const ticketId = req.params.id;
+        
+        // Only admins can delete tickets
+        if (user.role !== "admin") {
+            return res.status(403).json({ message: "Access denied. Only admins can delete tickets." });
+        }
+        
+        const ticket = await Ticket.findById(ticketId);
+        
+        if (!ticket) {
+            return res.status(404).json({ message: "Ticket not found" });
+        }
+        
+        await Ticket.findByIdAndDelete(ticketId);
+        
+        return res.status(200).json({ message: "Ticket deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting ticket:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
