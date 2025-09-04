@@ -88,3 +88,39 @@ export const getTicket = async(req,res) => {
         return res.status(500).json({message: "Internal Server Error"});
     }
 }
+
+// Full ticket details including AI fields for staff or ticket creator
+export const getTicketDetails = async(req,res) => {
+    try {
+        const user = req.user;
+        const ticket = await Ticket.findById(req.params.id)
+            .populate("assignedTo", ["email","_id"]);
+
+        if(!ticket){
+            return res.status(404).json({message: "Ticket not found"})
+        }
+
+        const isStaff = user.role !== "user";
+        const isCreator = String(ticket.createdBy) === String(user._id);
+        if (!isStaff && !isCreator) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        return res.status(200).json({
+            ticket: {
+                _id: ticket._id,
+                title: ticket.title,
+                description: ticket.description,
+                status: ticket.status,
+                createdAt: ticket.createdAt,
+                priority: ticket.priority || "",
+                helpfulNotes: ticket.helpfulNotes || "",
+                relatedSkills: ticket.relatedSkills || [],
+                assignedTo: ticket.assignedTo || null
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching ticket details");
+        return res.status(500).json({message: "Internal Server Error"});
+    }
+}

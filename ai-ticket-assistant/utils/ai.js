@@ -48,14 +48,53 @@ Ticket information:
 - Title: ${ticket.title}
 - Description: ${ticket.description}`);
 
-const raw = response.output?.[0]?.context || "";
+// Try to normalize the agent response across possible shapes
+let raw = "";
+try {
+  // Common shapes observed across agent-kit versions
+  raw =
+    response?.outputText ||
+    response?.text ||
+    response?.output?.[0]?.context ||
+    response?.output?.[0]?.content ||
+    response?.output ||
+    (Array.isArray(response?.messages)
+      ? response.messages[response.messages.length - 1]?.content
+      : "") ||
+    "";
+} catch {
+  raw = "";
+}
 
-let jsonString = raw.trim();
+if (typeof raw !== "string") {
+  try {
+    // If the SDK already returned an object, use it as-is
+    if (raw && typeof raw === "object") {
+      return raw;
+    }
+  } catch {}
+}
+
+let jsonString = String(raw || "").trim();
 try {
   return JSON.parse(jsonString);
 } catch {
-  const match = raw.match(/{[\s\S]*}/);
-  if (match) return JSON.parse(match[0]);
+  // Strip code fences or extra text; extract the first JSON object
+  const fenceStripped = jsonString
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(fenceStripped);
+  } catch {}
+
+  const match = jsonString.match(/{[\s\S]*}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch {}
+  }
+  console.warn("AI response could not be parsed as JSON. Raw value (truncated):", String(jsonString).slice(0, 300));
   return null;
 }
 
