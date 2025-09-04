@@ -8,6 +8,7 @@ import TicketDetailsPage from './pages/ticket.jsx'
 import Login from './pages/login.jsx'
 import Signup from './pages/signup.jsx'
 import Admin from './pages/admin.jsx'
+import Logout from './pages/Logout.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -55,6 +56,13 @@ createRoot(document.getElementById('root')).render(
             <CheckAuth protectedRoute={true}>
               <Admin/>
             </CheckAuth>
+          }
+        />
+
+        <Route 
+          path='/logout'
+          element={
+            <Logout />
           }
         />
 
