@@ -10,6 +10,10 @@ import { onTicketCreated } from "./inngest/functions/on-ticket-create.js"
 import dotenv from "dotenv"
 dotenv.config();
 
+// Import Inngest functions so they get registered
+import "./inngest/functions/on-ticket-create.js";
+import "./inngest/functions/on-signup.js";
+
 const PORT = process.env.PORT || 3000;
 const app = express();
 
