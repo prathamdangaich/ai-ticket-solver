@@ -23,7 +23,7 @@ export default function Tickets() {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets`, {
         headers: { Authorization: `Bearer ${token}` },
         method: "GET",
       });
@@ -52,7 +52,7 @@ export default function Tickets() {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets/${ticketId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` },
         method: "DELETE",
       });
@@ -99,7 +99,7 @@ export default function Tickets() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +132,7 @@ export default function Tickets() {
   // Fetch all users (admin only)
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/users`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -173,7 +173,7 @@ export default function Tickets() {
 
   const saveUser = async (u) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/update-user`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

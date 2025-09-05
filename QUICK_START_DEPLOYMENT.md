@@ -29,6 +29,7 @@
    MAILTRAP_SMTP_PASS=your_mailtrap_pass
    INNGEST_EVENT_KEY=your_inngest_event_key
    INNGEST_SIGNING_KEY=your_inngest_signing_key
+   INNGEST_APP_URL=https://your-backend-url.onrender.com
    NODE_ENV=production
    ```
 5. **Deploy** and note your backend URL

@@ -13,7 +13,7 @@ export default function TicketDetailsPage() {
     const fetchTicket = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/tickets/${id}/details`,
+          `${import.meta.env.VITE_API_URL}/api/tickets/${id}/details`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
