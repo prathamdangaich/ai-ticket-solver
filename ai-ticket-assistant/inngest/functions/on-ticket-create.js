@@ -46,57 +46,62 @@ export const onTicketCreated = inngest.createFunction(
             console.log("Ticket updated by AI with IN_PROGRESS status and related skills:", skills);
         }
         else{
-            console.log("AI failed or returned no relatedSkills. Ticket stays in TODO.");
-        }
+            //If no related skill is found
+            await Ticket.findByIdAndUpdate(ticket._id, {
+            priority: "medium", // safe default
+            helpfulNotes: "",
+            status: "IN_PROGRESS",
+            relatedSkills: []
+            });
+            console.log("AI failed → Ticket still set to IN_PROGRESS with fallback values.");
+            }
         return skills;
        });
         
         //Assign moderator
         const moderator = await step.run("assign-moderator", async () => {
-        if (relatedSkills.length === 0) {
-            console.log("No relatedSkills → skipping moderator assignment");
-            return null;
-        }
+            let user = null;
 
-        // First try to find a moderator with ALL required skills
-        let user = await User.findOne({ 
-            role: "moderator",
-            skills: { $all: relatedSkills }
-        });
+            if (relatedSkills.length > 0) {
+                // First try to find a moderator with ALL required skills
+                user = await User.findOne({ 
+                    role: "moderator",
+                    skills: { $all: relatedSkills }
+                });
 
-        // If no moderator has all skills, find the one with the most matching skills
-        if (!user) {
-            const moderators = await User.find({ role: "moderator" });
-            let bestMatch = null;
-            let maxMatches = 0;
+                // If no moderator has all skills, find the one with the most matching skills
+                if (!user) {
+                    const moderators = await User.find({ role: "moderator" });
+                    let bestMatch = null;
+                    let maxMatches = 0;
 
-            for (const moderator of moderators) {
-                const matchingSkills = moderator.skills.filter(skill => 
-                    relatedSkills.some(requiredSkill => 
-                        skill.toLowerCase().includes(requiredSkill.toLowerCase()) ||
-                        requiredSkill.toLowerCase().includes(skill.toLowerCase())
-                    )
-                );
-                
-                if (matchingSkills.length > maxMatches) {
-                    maxMatches = matchingSkills.length;
-                    bestMatch = moderator;
+                    for (const moderator of moderators) {
+                        const matchingSkills = moderator.skills.filter(skill => 
+                            relatedSkills.some(requiredSkill => 
+                                skill.toLowerCase().includes(requiredSkill.toLowerCase()) ||
+                                requiredSkill.toLowerCase().includes(skill.toLowerCase())
+                            )
+                        );
+                        
+                        if (matchingSkills.length > maxMatches) {
+                            maxMatches = matchingSkills.length;
+                            bestMatch = moderator;
+                        }
+                    }
+
+                    user = bestMatch;
                 }
             }
 
-            user = bestMatch;
-        }
+            // 🔥 Always fallback to admin if no suitable moderator or no related skills
+            if (!user) {
+                user = await User.findOne({ role: "admin" });
+            }
 
-        // Fallback to admin if no suitable moderator found
-        if (!user) {
-            user = await User.findOne({ role: "admin" });
-        }
-
-        await Ticket.findByIdAndUpdate(ticket._id, { assignedTo: user?._id || null });
-        console.log("Ticket assigned to user:", user?.email || "None");
-        return user;
+            await Ticket.findByIdAndUpdate(ticket._id, { assignedTo: user?._id || null });
+            console.log("Ticket assigned to user:", user?.email || "None");
+            return user;
         });
-
 
         //Send email
        await step.run("send-email-notification", async() => {
