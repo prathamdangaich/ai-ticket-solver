@@ -23,6 +23,15 @@ app.use(express.json())
 app.use("/api/auth", userRoutes);
 app.use("/api/tickets",ticketRoutes);
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ 
+        status: "OK", 
+        timestamp: new Date().toISOString(),
+        service: "AI Ticket Assistant Backend"
+    });
+});
+
 app.use("/api/inngest",serve({
     client: inngest,
     functions: [onUserSignup, onTicketCreated]
